@@ -8,21 +8,18 @@ class MyNetwork(dht.DHT):
         self._my_db = {}
         super(MyNetwork, self).__init__(*args, **kwargs)
 
-    def handle_save(self, key, value, use_cache=False):
-        # Note: the DHT caches data from time to time for faster access, you can
-        # handle these cache save/load requests by respecting the use_cache flag.
-
+    def handle_save(self, key, value):
         self._my_db[key] = value
         return True
 
-    def handle_load(self, key, use_cache=False):
+    def handle_load(self, key):
         return self._my_db.get(key)
 
-    def handle_delete(self, key, use_cache=False):
+    def handle_delete(self, key):
         del self._my_db[key]
         return True
 
-    def handle_has_key(self, key, use_cache=False):
+    def handle_has_key(self, key):
         return key in self._my_db
 
 def main():
