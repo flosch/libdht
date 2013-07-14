@@ -36,7 +36,6 @@ class Bootstrapper(object):
         assert 0 <= node_id <= dht.MAX_ID
         assert isinstance(dht_port, types.IntType)
         
-        self._active = False
         self._network_id = network_id
         self._node_id = node_id
         self._dht_port = dht_port

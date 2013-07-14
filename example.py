@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import random, time, sys, dht
+import random, time, sys, dht, bootstrap
 random.seed(time.time())
 
 class MyNetwork(dht.DHT):
@@ -25,23 +25,16 @@ class MyNetwork(dht.DHT):
 def main():
     # Uses port as first argument for communication (TCP+UDP)
     my_id = random.randint(0, dht.MAX_ID)
-    n = MyNetwork(node_id=my_id, port=int(sys.argv[1]))
+    port = random.randint(5000, 10000)
+    n = MyNetwork(node_id=my_id, port=port)
     
-    # Start the network
-    n.start()
+    bootstrapper = bootstrap.Bootstrapper(network_id="test", node_id=my_id,
+                                          dht_port=port)
+    bootstrapper.start_network(n)
     try:
         print "My ID = %d" % my_id
         print
      
-        # Get some nodes to join in the format ID/host:port
-        if len(sys.argv) > 2:
-            hosts = []   
-            for s in sys.argv[2:]:
-                node_id, r = s.split("/")
-                host, port = r.split(":")
-                hosts.append((int(node_id), host, int(port)))
-            n.join(hosts)
-    
         # Hash your data (160-bit integer), for this example we'll get a random int
         data_id = random.randint(0, dht.MAX_ID)
     
@@ -62,7 +55,7 @@ def main():
         raw_input("Enter to exit.")
     finally:
         # Make sure network is always shutting down
-        n.stop()
+        bootstrapper.stop_network(n)
 
 if __name__ == "__main__":
     main()
