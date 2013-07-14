@@ -1,3 +1,5 @@
+**Important note**: The library is still **work in progress**, there are a lot of TODOs in it. So please be careful when using libdht. I strongly advise against using it in a production environment yet.
+
 Simple example of how to use the DHT library:
 
 
