@@ -1,12 +1,14 @@
 **Important note**: The library is still **work in progress**, there are a lot of TODOs in it. So please be careful when using libdht. I strongly advise against using it in a production environment yet.
 
+libdht supports bootstrapping (currently only searching for nodes in the local network using broadcast).
+
 Simple example of how to use the DHT library:
 
 
 ```bash
 (There are already 2 other nodes started.)
 
-$ python example.py 5002 565327489349905343449083310397903460390540726458/127.0.0.1:5000
+$ python example.py
 My ID = 315266357664053077240863549245018455720435477024
 
 Saving: True
@@ -20,7 +22,7 @@ Enter to exit.
 ```python
 # -*- coding: utf-8 -*-
 
-import random, time, sys, dht
+import random, time, sys, dht, bootstrap
 random.seed(time.time())
 
 class MyNetwork(dht.DHT):
@@ -28,43 +30,33 @@ class MyNetwork(dht.DHT):
         self._my_db = {}
         super(MyNetwork, self).__init__(*args, **kwargs)
 
-    def handle_save(self, key, value, use_cache=False):
-        # Note: the DHT caches data from time to time for faster access, you can
-        # handle these cache save/load requests by respecting the use_cache flag.
-
+    def handle_save(self, key, value):
         self._my_db[key] = value
         return True
 
-    def handle_load(self, key, use_cache=False):
+    def handle_load(self, key):
         return self._my_db.get(key)
 
-    def handle_delete(self, key, use_cache=False):
+    def handle_delete(self, key):
         del self._my_db[key]
         return True
 
-    def handle_has_key(self, key, use_cache=False):
+    def handle_has_key(self, key):
         return key in self._my_db
 
 def main():
     # Uses port as first argument for communication (TCP+UDP)
     my_id = random.randint(0, dht.MAX_ID)
-    n = MyNetwork(node_id=my_id, port=int(sys.argv[1]))
+    port = random.randint(5000, 10000)
+    n = MyNetwork(node_id=my_id, port=port)
     
-    # Start the network
-    n.start()
+    bootstrapper = bootstrap.Bootstrapper(network_id="test", node_id=my_id,
+                                          dht_port=port)
+    bootstrapper.start_network(n)
     try:
         print "My ID = %d" % my_id
         print
      
-        # Get some nodes to join in the format ID/host:port
-        if len(sys.argv) > 2:
-            hosts = []   
-            for s in sys.argv[2:]:
-                node_id, r = s.split("/")
-                host, port = r.split(":")
-                hosts.append((int(node_id), host, int(port)))
-            n.join(hosts)
-    
         # Hash your data (160-bit integer), for this example we'll get a random int
         data_id = random.randint(0, dht.MAX_ID)
     
@@ -85,7 +77,7 @@ def main():
         raw_input("Enter to exit.")
     finally:
         # Make sure network is always shutting down
-        n.stop()
+        bootstrapper.stop_network(n)
 
 if __name__ == "__main__":
     main()
